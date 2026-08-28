@@ -6,8 +6,7 @@ compatibility_date = "2024-09-23"
 directory = "./out"
 binding = "ASSETS"
 
-# À ajouter une fois la base D1 créée (voir README.md) :
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "shiourgavriel-db"
-# database_id = "<à remplir après création de la base>"
+[[d1_databases]]
+binding = "DB"
+database_name = "shiourgavriel-db"
+database_id = "170237c6-8d95-4fce-8757-8bf2a34649a8"
