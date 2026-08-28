@@ -132,10 +132,11 @@ const fr: Dictionary = {
     aProposTitre: "Un professeur expérimenté dans le système scolaire israélien",
     langues: "Langues d'enseignement : français, hébreu.",
     parcours: [
-      "Reconversion depuis les marchés financiers vers l'enseignement des mathématiques",
-      "Certifications en cours : Teoudat Horaa, Mekhlala Talpiot",
-      "Enseignement en France : collège et lycée, cours particuliers (2023–2024)",
-      "Lauréat, Paris (2016–2020)",
+      "Professeur titulaire du ministère de l'Éducation israélien (Misrad HaHinoukh), enseignant en collège et lycée",
+      "Titulaire d'un master en mathématiques (Toar Chéni) et d'un master en gestion",
+      "A enseigné en France, en collège et en lycée",
+      "Titulaire de la Teoudat Horaa israélienne",
+      "Spécialiste de l'accompagnement en mathématiques des olim hadashim francophones",
     ],
     atouts: [
       { titre: "Méthode personnalisée", texte: "Adaptée au niveau et au rythme de chaque élève." },
@@ -147,7 +148,8 @@ const fr: Dictionary = {
     tarifsTitre: "Simple et transparent",
     niveaux: [
       { titre: "Collège", detail: "de la 5ème à la 3ème", prix: "90 ₪" },
-      { titre: "Lycée", detail: "de la 2nde à la Terminale", prix: "100 ₪" },
+      { titre: "Lycée", detail: "de la 2nde à la 1ère", prix: "100 ₪" },
+      { titre: "Terminale / Bac", detail: "préparation au baccalauréat", prix: "110 ₪" },
     ],
     parHeure: "/ heure",
     tarifsNote:
@@ -255,10 +257,11 @@ const he: Dictionary = {
     aProposTitre: "מורה מנוסה במערכת החינוך הישראלית",
     langues: "שפות הוראה: צרפתית, עברית.",
     parcours: [
-      "מעבר קריירה משוק ההון להוראת מתמטיקה",
-      "בתהליך הסמכה: תעודת הוראה, מכללת תלפיות",
-      "הוראה בצרפת: חטיבת ביניים ותיכון, שיעורים פרטיים (2023–2024)",
-      "בוגר, פריז (2016–2020)",
+      "מורה קבוע במשרד החינוך הישראלי, מלמד בחטיבת ביניים ובתיכון",
+      "בעל תואר שני (M.Sc) במתמטיקה ותואר שני בניהול",
+      "לימד בצרפת, בחטיבת ביניים ובתיכון",
+      "בעל תעודת הוראה ישראלית",
+      "מומחה בליווי עולים חדשים דוברי צרפתית במתמטיקה",
     ],
     atouts: [
       { titre: "שיטה מותאמת אישית", texte: "מותאמת לרמה ולקצב של כל תלמיד/ה." },
