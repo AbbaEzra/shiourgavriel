@@ -1,8 +1,8 @@
 # Shiour Gavriel — site vitrine + réservation
 
 Site de Gabriel Krief : cours particuliers de mathématiques. Page vitrine statique (Next.js, export)
-+ page de réservation connectée à Google Agenda via des Cloudflare Pages Functions, avec Cloudflare D1
-comme garde-fou anti-double-réservation.
++ page de réservation connectée à Google Agenda via un Cloudflare Worker (assets statiques + API),
+avec Cloudflare D1 comme garde-fou anti-double-réservation.
 
 ## Structure
 
@@ -10,12 +10,19 @@ comme garde-fou anti-double-réservation.
 app/                    Pages Next.js (export statique)
   page.tsx              Vitrine
   reserver/page.tsx      Réservation (client component, appelle /api/*)
-functions/api/           Cloudflare Pages Functions (Workers runtime, pas Next.js)
-  _shared.ts             Config créneaux + échange refresh token → access token
+worker/                  Point d'entrée Cloudflare Worker (assets + API, pas Next.js)
+  index.ts               Routeur : /api/* → handlers, sinon sert out/ (ASSETS)
+  shared.ts               Config créneaux + échange refresh token → access token
   availability.ts        GET  /api/availability
   book.ts                 POST /api/book
 schema.sql               Schéma de la base D1 (table reservations)
+wrangler.toml             Config Worker : entry point (main), assets (out/), bindings D1
 ```
+
+Le projet Cloudflare est un **Worker avec assets statiques** (pas un projet "Pages" classique) :
+`wrangler.toml` déclare `main = "worker/index.ts"` (le code serveur) et `[assets] directory = "./out"`
+(le site statique généré par `next build`). Le Worker sert les deux : `/api/*` est intercepté par le
+routeur, tout le reste tombe sur les fichiers statiques.
 
 ## Ce qu'il reste à configurer avant que la réservation fonctionne
 
@@ -27,8 +34,10 @@ fonctionnera qu'une fois ces éléments configurés côté Cloudflare** :
 1. Dashboard Cloudflare → **Workers & Pages** → **D1 SQL Database** → **Create database**
 2. Nom : `shiourgavriel-db` (ou autre)
 3. Une fois créée → onglet **Console** → coller le contenu de `schema.sql` → exécuter
-4. Retourner sur le projet Pages **shiourgavriel** → **Settings** → **Functions** → **D1 database bindings**
-   → **Add binding** : nom de variable `DB`, base = celle créée à l'étape 2
+4. Copier l'**ID de la base** (Database ID, affiché sur sa page de détail)
+5. Dans `wrangler.toml`, décommenter le bloc `[[d1_databases]]` en bas du fichier et coller
+   l'ID à la place de `<à remplir après création de la base>`
+6. Committer et pousser ce changement (redéploiement automatique)
 
 ### 2. Identifiants Google Calendar (OAuth)
 
@@ -48,19 +57,24 @@ Le compte à connecter est `gavrielkrief66@gmail.com`.
      `https://www.googleapis.com/auth/calendar`
    - **Authorize APIs** → se connecter avec `gavrielkrief66@gmail.com` → accepter
    - **Step 2 : Exchange authorization code for tokens** → copier la valeur de **Refresh token**
-5. Dans Cloudflare Pages → projet **shiourgavriel** → **Settings → Environment variables**, ajouter :
+5. Dans Cloudflare, projet **shiourgavriel** → **Settings → Variables and secrets**, ajouter :
    - `GOOGLE_CLIENT_ID` = le Client ID
-   - `GOOGLE_CLIENT_SECRET` = le Client Secret (cocher **Encrypt**)
-   - `GOOGLE_REFRESH_TOKEN` = le refresh token obtenu (cocher **Encrypt**)
+   - `GOOGLE_CLIENT_SECRET` = le Client Secret (type **Secret**)
+   - `GOOGLE_REFRESH_TOKEN` = le refresh token obtenu (type **Secret**)
    - `GOOGLE_CALENDAR_ID` = `gavrielkrief66@gmail.com` (ou l'ID d'un agenda secondaire dédié, si préféré)
 
-### 3. Build settings Cloudflare Pages
+### 3. Build settings Cloudflare (Workers & Pages → shiourgavriel → Settings → Builds)
 
-- Root directory : `/` (ou le sous-dossier si le repo est un monorepo)
 - Build command : `npm run build`
-- Build output directory : `out`
+- Deploy command : `npx wrangler deploy`
+- Root directory : `/`
 
-## Réglages à ajuster (constantes dans `functions/api/_shared.ts`)
+### 4. Domaine personnalisé
+
+Une fois le déploiement stable : **Settings → Domains → Add domain** → `shiourgavriel.com`
+(le domaine est déjà chez Cloudflare, donc la connexion DNS se fait automatiquement).
+
+## Réglages à ajuster (constantes dans `worker/shared.ts`)
 
 - `JOURS_DISPONIBLES` — jours de la semaine ouverts à la réservation (défaut : lundi à jeudi)
 - `HEURE_DEBUT` / `HEURE_FIN` — plage horaire quotidienne (défaut : 16h–20h)
@@ -71,7 +85,6 @@ Le compte à connecter est `gavrielkrief66@gmail.com`.
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000 (page vitrine + réservation, mais /api/* ne répond
-                  # qu'une fois déployé sur Cloudflare Pages, ou testé via `wrangler pages dev`)
 npm run build    # génère out/
+npx wrangler dev # sert out/ + /api/* localement via le Worker (nécessite les secrets en local, voir .dev.vars)
 ```

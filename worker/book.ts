@@ -1,6 +1,6 @@
 // POST /api/book — crée la réservation : événement Google Calendar (avec
 // invitation e-mail automatique à l'élève via sendUpdates=all) + ligne D1.
-import { getAccessToken, jsonResponse, type Env } from "./_shared";
+import { getAccessToken, jsonResponse, type Env } from "./shared";
 
 interface ReservationBody {
   start: string;
@@ -20,8 +20,7 @@ const LABEL_LIEU: Record<string, string> = {
   zoom: "Par Zoom",
 };
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const { env, request } = context;
+export async function handleBook(request: Request, env: Env): Promise<Response> {
   let body: ReservationBody;
   try {
     body = await request.json();
@@ -113,4 +112,4 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     .run();
 
   return jsonResponse({ success: true, id });
-};
+}

@@ -3,6 +3,7 @@
 
 export interface Env {
   DB: D1Database;
+  ASSETS: Fetcher;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   GOOGLE_REFRESH_TOKEN: string;
@@ -10,7 +11,7 @@ export interface Env {
 }
 
 // --- Plage de disponibilité par défaut (à ajuster selon les préférences de Gabriel) ---
-// Jours : 1 = lundi ... 7 = dimanche. Horaires en heure locale Israël.
+// Jours (convention JS Date#getUTCDay) : 0 = dimanche ... 6 = samedi. Horaires en heure locale Israël.
 export const JOURS_DISPONIBLES = [1, 2, 3, 4]; // lundi à jeudi
 export const HEURE_DEBUT = 16; // 16h
 export const HEURE_FIN = 20; // 20h

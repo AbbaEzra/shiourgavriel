@@ -11,7 +11,7 @@ import {
   getAccessToken,
   jsonResponse,
   type Env,
-} from "./_shared";
+} from "./shared";
 
 const DELAI_MIN_MINUTES = 120; // pas de réservation à moins de 2h du début du créneau
 
@@ -78,8 +78,7 @@ function genererCreneauxCandidats(): Creneau[] {
   return creneaux;
 }
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { env } = context;
+export async function handleAvailability(env: Env): Promise<Response> {
   const candidats = genererCreneauxCandidats();
   const maintenant = Date.now() + DELAI_MIN_MINUTES * 60000;
   const futurs = candidats.filter((c) => new Date(c.start).getTime() > maintenant);
@@ -125,4 +124,4 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   } catch (err) {
     return jsonResponse({ creneaux: [], error: (err as Error).message }, 502);
   }
-};
+}
