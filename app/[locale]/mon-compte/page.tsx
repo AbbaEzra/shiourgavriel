@@ -3,6 +3,8 @@
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { LangSwitcher } from "@/components/LangSwitcher";
+import { getDictionary, type Locale } from "@/lib/dictionaries";
 
 interface Profil {
   id: string;
@@ -15,13 +17,9 @@ interface Profil {
   lieu_prefere: string | null;
 }
 
-const LIEUX = [
-  { id: "eleve", label: "Chez l'élève" },
-  { id: "prof", label: "Chez le professeur" },
-  { id: "zoom", label: "Par Zoom" },
-] as const;
-
-function MonCompteContenu() {
+function MonCompteContenu({ locale }: { locale: Locale }) {
+  const dict = getDictionary(locale);
+  const t = dict.monCompte;
   const params = useSearchParams();
   const bienvenue = params.get("bienvenue") === "1";
 
@@ -61,27 +59,25 @@ function MonCompteContenu() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error();
-      setMessage("Profil enregistré.");
+      setMessage(t.messageSucces);
     } catch {
-      setMessage("Erreur lors de l'enregistrement. Réessayez.");
+      setMessage(t.messageErreur);
     } finally {
       setEnregistrement(false);
     }
   }
 
-  if (etat === "chargement") {
-    return <p className="mt-8 text-[14.5px] text-sg-muted">Chargement…</p>;
-  }
+  if (etat === "chargement") return <p className="mt-8 text-[14.5px] text-sg-muted">{t.chargement}</p>;
 
   if (etat === "non-connecte") {
     return (
       <div className="mt-8 rounded-sg-xl border border-sg-border bg-sg-paper p-6 text-center">
-        <p className="text-[14.5px] text-sg-ink">Vous n'êtes pas connecté(e).</p>
+        <p className="text-[14.5px] text-sg-ink">{t.nonConnecte}</p>
         <Link
-          href="/connexion/"
+          href={`/${locale}/connexion/`}
           className="mt-4 inline-block rounded-sg-md bg-sg-gold px-5 py-2.5 text-[14px] font-bold text-sg-gold-ink"
         >
-          Se connecter
+          {t.seConnecter}
         </Link>
       </div>
     );
@@ -93,16 +89,15 @@ function MonCompteContenu() {
     <>
       {bienvenue && (
         <div className="mt-6 rounded-sg-lg border border-sg-gold bg-sg-gold/10 p-4 text-[14px] text-sg-ink">
-          Bienvenue ! Complétez votre profil ci-dessous pour ne plus avoir à ressaisir vos informations lors
-          des prochaines réservations.
+          {t.bienvenue}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
-        <p className="text-[13.5px] text-sg-muted">Connecté(e) en tant que {profil.email}</p>
+        <p className="text-[13.5px] text-sg-muted">{t.connecteEnTantQue(profil.email)}</p>
 
         <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
-          Nom *
+          {t.champNom}
           <input
             required
             name="nom"
@@ -111,16 +106,17 @@ function MonCompteContenu() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
-          Téléphone
+          {t.champTelephone}
           <input
             name="telephone"
             type="tel"
+            dir="ltr"
             defaultValue={profil.telephone ?? ""}
             className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
           />
         </label>
         <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
-          Niveau scolaire
+          {t.champNiveau}
           <input
             name="niveau"
             defaultValue={profil.niveau ?? ""}
@@ -128,7 +124,7 @@ function MonCompteContenu() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
-          Adresse (pour les cours à domicile)
+          {t.champAdresse}
           <input
             name="adresse"
             defaultValue={profil.adresse ?? ""}
@@ -136,7 +132,7 @@ function MonCompteContenu() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
-          Digicode / instructions d'accès
+          {t.champDigicode}
           <input
             name="digicode"
             defaultValue={profil.digicode ?? ""}
@@ -144,9 +140,9 @@ function MonCompteContenu() {
           />
         </label>
         <div>
-          <span className="mb-1.5 block text-[14px] font-semibold text-sg-ink">Lieu préféré</span>
+          <span className="mb-1.5 block text-[14px] font-semibold text-sg-ink">{t.lieuPrefereLabel}</span>
           <div className="flex flex-wrap gap-2">
-            {LIEUX.map((l) => (
+            {t.lieux.map((l) => (
               <label
                 key={l.id}
                 className="flex items-center gap-1.5 rounded-sg-pill border border-sg-border px-3.5 py-2 text-[13.5px] font-semibold text-sg-ink has-[:checked]:border-sg-navy has-[:checked]:bg-sg-navy has-[:checked]:text-white"
@@ -171,37 +167,45 @@ function MonCompteContenu() {
           disabled={enregistrement}
           className="rounded-sg-md bg-sg-gold py-3.5 text-[15.5px] font-bold text-sg-gold-ink shadow-sg-cta transition hover:-translate-y-px disabled:opacity-60"
         >
-          {enregistrement ? "Enregistrement…" : "Enregistrer"}
+          {enregistrement ? t.boutonEnregistrement : t.boutonEnregistrer}
         </button>
       </form>
 
       <form action="/api/auth/deconnexion" method="POST" className="mt-4">
         <button type="submit" className="text-[13.5px] font-semibold text-sg-muted underline">
-          Se déconnecter
+          {t.seDeconnecter}
         </button>
       </form>
     </>
   );
 }
 
-export default function MonComptePage() {
+export default function MonComptePage({ params }: { params: { locale: string } }) {
+  const locale = params.locale as Locale;
+  const dict = getDictionary(locale);
+
   return (
     <>
       <header className="border-b border-sg-border bg-sg-cream">
         <div className="mx-auto flex max-w-sg-container items-center justify-between px-sg-gutter py-4">
-          <Link href="/" className="font-display text-[20px] font-extrabold text-sg-navy">
-            Shiour Gavriel
+          <Link href={`/${locale}/`} className="font-display text-[20px] font-extrabold text-sg-navy">
+            {dict.siteName}
           </Link>
-          <Link href="/reserver/" className="text-[13.5px] font-semibold text-sg-navy underline">
-            Réserver un cours →
-          </Link>
+          <div className="flex items-center gap-3.5">
+            <LangSwitcher locale={locale} />
+            <Link href={`/${locale}/reserver/`} className="text-[13.5px] font-semibold text-sg-navy underline">
+              {dict.nav.reserver}
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-[480px] px-sg-gutter py-[clamp(32px,5vw,56px)]">
-        <h1 className="font-display text-[clamp(24px,3vw,30px)] font-extrabold text-sg-navy">Mon compte</h1>
-        <Suspense fallback={<p className="mt-8 text-[14.5px] text-sg-muted">Chargement…</p>}>
-          <MonCompteContenu />
+        <h1 className="font-display text-[clamp(24px,3vw,30px)] font-extrabold text-sg-navy">
+          {dict.monCompte.titre}
+        </h1>
+        <Suspense fallback={<p className="mt-8 text-[14.5px] text-sg-muted">{dict.monCompte.chargement}</p>}>
+          <MonCompteContenu locale={locale} />
         </Suspense>
       </main>
     </>

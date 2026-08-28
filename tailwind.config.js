@@ -33,8 +33,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "Georgia", "Times New Roman", "serif"],
-        body: ["var(--font-sans)", "system-ui", "-apple-system", "sans-serif"],
+        display: ["var(--font-rubik)", "system-ui", "-apple-system", "sans-serif"],
+        body: ["var(--font-rubik)", "system-ui", "-apple-system", "sans-serif"],
       },
       borderRadius: {
         "sg-sm": "8px",

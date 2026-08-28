@@ -18,6 +18,13 @@ export default {
     const { pathname } = url;
     const { method } = request;
 
+    // Racine du site : redirige vers /fr/ ou /he/ selon la langue du navigateur.
+    if (pathname === "/") {
+      const acceptLanguage = request.headers.get("Accept-Language") ?? "";
+      const locale = acceptLanguage.toLowerCase().startsWith("he") ? "he" : "fr";
+      return Response.redirect(`${url.origin}/${locale}/`, 302);
+    }
+
     if (pathname === "/api/availability" && method === "GET") return handleAvailability(env);
     if (pathname === "/api/book" && method === "POST") return handleBook(request, env);
 
@@ -25,7 +32,7 @@ export default {
     if (pathname === "/api/auth/verifier" && method === "GET") return handleVerifier(request, env);
     if (pathname === "/api/auth/moi" && method === "GET") return handleMoi(request, env);
     if (pathname === "/api/auth/profil" && method === "POST") return handleMettreAJourProfil(request, env);
-    if (pathname === "/api/auth/deconnexion" && method === "POST") return handleDeconnexion();
+    if (pathname === "/api/auth/deconnexion" && method === "POST") return handleDeconnexion(request);
     if (pathname === "/api/auth/creer-compte-apres-reservation" && method === "POST")
       return handleCreerCompteApresReservation(request, env);
 

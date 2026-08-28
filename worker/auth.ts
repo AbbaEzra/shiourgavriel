@@ -27,7 +27,12 @@ function origin(request: Request): string {
   return new URL(request.url).origin;
 }
 
-async function creerEtEnvoyerLien(env: Env, email: string, baseUrl: string, redirect = "/reserver/"): Promise<void> {
+/** Extrait le préfixe de langue (fr/he) en tête d'un chemin comme /fr/reserver/. */
+function localeFromPath(path: string): "fr" | "he" {
+  return path.startsWith("/he/") ? "he" : "fr";
+}
+
+async function creerEtEnvoyerLien(env: Env, email: string, baseUrl: string, redirect = "/fr/reserver/"): Promise<void> {
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + LIEN_VALIDE_MIN * 60000).toISOString();
   await env.DB.prepare(
@@ -37,16 +42,26 @@ async function creerEtEnvoyerLien(env: Env, email: string, baseUrl: string, redi
     .run();
 
   const lien = `${baseUrl}/api/auth/verifier?token=${token}&redirect=${encodeURIComponent(redirect)}`;
-  await envoyerEmail(
-    env,
-    email,
-    "Votre lien de connexion — Shiour Gavriel",
-    `<p>Bonjour,</p>
+  const locale = localeFromPath(redirect);
+  const contenu =
+    locale === "he"
+      ? {
+          sujet: "קישור ההתחברות שלכם — שיעור גבריאל",
+          corps: `<p dir="rtl" style="text-align:right">שלום,</p>
+     <p dir="rtl" style="text-align:right">לחצו על הקישור למטה כדי להתחבר לחשבון שלכם באתר שיעור גבריאל
+     (בתוקף ל-${LIEN_VALIDE_MIN} דקות):</p>
+     <p><a href="${lien}">${lien}</a></p>
+     <p dir="rtl" style="text-align:right">אם לא ביקשתם קישור זה, אפשר פשוט להתעלם מהאימייל.</p>`,
+        }
+      : {
+          sujet: "Votre lien de connexion — Shiour Gavriel",
+          corps: `<p>Bonjour,</p>
      <p>Cliquez sur le lien ci-dessous pour vous connecter à votre espace Shiour Gavriel
      (valable ${LIEN_VALIDE_MIN} minutes) :</p>
      <p><a href="${lien}">${lien}</a></p>
      <p>Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.</p>`,
-  );
+        };
+  await envoyerEmail(env, email, contenu.sujet, contenu.corps);
 }
 
 /** POST /api/auth/demander-lien — body { email, redirect? } */
@@ -57,7 +72,7 @@ export async function handleDemanderLien(request: Request, env: Env): Promise<Re
     return jsonResponse({ success: false, error: "Adresse e-mail invalide" }, 400);
   }
   try {
-    await creerEtEnvoyerLien(env, email, origin(request), body?.redirect || "/reserver/");
+    await creerEtEnvoyerLien(env, email, origin(request), body?.redirect || "/fr/reserver/");
     return jsonResponse({ success: true });
   } catch (err) {
     return jsonResponse({ success: false, error: (err as Error).message }, 502);
@@ -68,7 +83,7 @@ export async function handleDemanderLien(request: Request, env: Env): Promise<Re
 export async function handleVerifier(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  const redirect = url.searchParams.get("redirect") || "/reserver/";
+  const redirect = url.searchParams.get("redirect") || "/fr/reserver/";
   if (!token) return new Response("Lien invalide.", { status: 400 });
 
   const lien = await env.DB.prepare(
@@ -104,7 +119,7 @@ export async function handleVerifier(request: Request, env: Env): Promise<Respon
   }
 
   const cookie = await createSessionCookie(eleveId, env);
-  const destination = premiereConnexion ? "/mon-compte/?bienvenue=1" : redirect;
+  const destination = premiereConnexion ? `/${localeFromPath(redirect)}/mon-compte/?bienvenue=1` : redirect;
   return new Response(null, {
     status: 302,
     headers: { Location: destination, "Set-Cookie": cookie },
@@ -152,10 +167,12 @@ export async function handleMettreAJourProfil(request: Request, env: Env): Promi
 }
 
 /** POST /api/auth/deconnexion */
-export async function handleDeconnexion(): Promise<Response> {
+export async function handleDeconnexion(request: Request): Promise<Response> {
+  const referer = request.headers.get("Referer") ?? "";
+  const locale = localeFromPath(new URL(referer || "https://x/fr/").pathname);
   return new Response(null, {
     status: 302,
-    headers: { Location: "/", "Set-Cookie": clearSessionCookie() },
+    headers: { Location: `/${locale}/`, "Set-Cookie": clearSessionCookie() },
   });
 }
 
@@ -167,7 +184,7 @@ export async function handleDeconnexion(): Promise<Response> {
  */
 export async function handleCreerCompteApresReservation(request: Request, env: Env): Promise<Response> {
   const body = (await request.json().catch(() => null)) as
-    | (Partial<EleveProfil> & { email?: string; lieu?: string })
+    | (Partial<EleveProfil> & { email?: string; lieu?: string; redirect?: string })
     | null;
   const email = body?.email?.trim().toLowerCase();
   if (!email || !body?.nom) {
@@ -212,7 +229,7 @@ export async function handleCreerCompteApresReservation(request: Request, env: E
   }
 
   try {
-    await creerEtEnvoyerLien(env, email, origin(request), "/reserver/");
+    await creerEtEnvoyerLien(env, email, origin(request), body.redirect || "/fr/reserver/");
     return jsonResponse({ success: true });
   } catch (err) {
     return jsonResponse({ success: false, error: (err as Error).message }, 502);
