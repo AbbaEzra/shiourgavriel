@@ -8,15 +8,118 @@ export function otherLocale(locale: Locale): Locale {
   return locale === "fr" ? "he" : "fr";
 }
 
-const fr = {
-  dir: "ltr" as const,
+interface LieuOption {
+  id: string;
+  label: string;
+}
+
+interface Dictionary {
+  dir: "ltr" | "rtl";
+  siteName: string;
+  nav: {
+    connexion: string;
+    reserver: string;
+    retourAccueil: string;
+    dejaInscrit: string;
+    monCompte: (nom: string) => string;
+  };
+  home: {
+    badge: string;
+    titre1: string;
+    titre2: string;
+    sousTitre: string;
+    ctaReserver: string;
+    aProposLabel: string;
+    aProposTitre: string;
+    langues: string;
+    parcours: string[];
+    atouts: { titre: string; texte: string }[];
+    tarifsLabel: string;
+    tarifsTitre: string;
+    niveaux: { titre: string; detail: string; prix: string }[];
+    parHeure: string;
+    tarifsNote: string;
+    zoneLabel: string;
+    zoneTexte: string;
+    ctaFinalTitre: string;
+    ctaFinalTexte: string;
+  };
+  reserver: {
+    titre: string;
+    sousTitre: string;
+    chargement: string;
+    aucunCreneau: string;
+    creneauChoisi: (jour: string, heure: string) => string;
+    changerCreneau: string;
+    prefilNote: string;
+    champNom: string;
+    champTelephone: string;
+    champEmail: string;
+    champNiveau: string;
+    champNiveauSelect: string;
+    champLieu: string;
+    champAdresse: string;
+    champAdressePlaceholder: string;
+    champDigicode: string;
+    champDigicodePlaceholder: string;
+    champMessage: string;
+    champMessagePlaceholder: string;
+    boutonConfirmer: string;
+    boutonEnvoi: string;
+    lieux: LieuOption[];
+    niveaux: string[];
+    confirmeTitre: string;
+    confirmeTexte: (jour: string, heure: string) => string;
+    retourAccueil: string;
+    erreurGenerique: string;
+    erreurCreneaux: string;
+    compteProposeTitre: string;
+    compteProposeTexte: string;
+    compteBoutonCreer: string;
+    compteEnvoye: string;
+  };
+  connexion: {
+    titre: string;
+    sousTitre: string;
+    envoyeTitre: string;
+    envoyeTexte: (email: string) => string;
+    champEmail: string;
+    erreur: string;
+    bouton: string;
+    boutonEnvoi: string;
+    note: string;
+  };
+  monCompte: {
+    titre: string;
+    chargement: string;
+    nonConnecte: string;
+    seConnecter: string;
+    bienvenue: string;
+    connecteEnTantQue: (email: string) => string;
+    champNom: string;
+    champTelephone: string;
+    champNiveau: string;
+    champAdresse: string;
+    champDigicode: string;
+    lieuPrefereLabel: string;
+    lieux: LieuOption[];
+    boutonEnregistrer: string;
+    boutonEnregistrement: string;
+    messageSucces: string;
+    messageErreur: string;
+    seDeconnecter: string;
+  };
+}
+
+const fr: Dictionary = {
+  dir: "ltr",
   siteName: "Shiour Gavriel",
   nav: {
     connexion: "Connexion",
     reserver: "Réserver un cours",
     retourAccueil: "← Retour à l'accueil",
     dejaInscrit: "Déjà inscrit ? Se connecter",
-    monCompte: (nom: string) => `Mon compte (${nom})`,
+    monCompte: (nom) => `Mon compte (${nom})`,
   },
   home: {
     badge: "Cours particuliers · Collège & Lycée",
@@ -59,7 +162,7 @@ const fr = {
     sousTitre: "Choisissez un créneau disponible dans l'agenda de Gabriel.",
     chargement: "Chargement des créneaux disponibles…",
     aucunCreneau: "Aucun créneau disponible pour le moment. Contactez Gabriel directement au",
-    creneauChoisi: (jour: string, heure: string) => `Créneau choisi : ${jour} à ${heure}`,
+    creneauChoisi: (jour, heure) => `Créneau choisi : ${jour} à ${heure}`,
     changerCreneau: "Changer de créneau",
     prefilNote: "Vos informations sont pré-remplies depuis votre profil — modifiez-les si besoin.",
     champNom: "Nom de l'élève / du parent *",
@@ -80,14 +183,15 @@ const fr = {
       { id: "eleve", label: "Chez l'élève" },
       { id: "prof", label: "Chez le professeur" },
       { id: "zoom", label: "Par Zoom" },
-    ] as const,
+    ],
     niveaux: ["6ème", "5ème", "4ème", "3ème", "2nde", "1ère", "Terminale", "Autre"],
     confirmeTitre: "Réservation confirmée !",
-    confirmeTexte: (jour: string, heure: string) =>
+    confirmeTexte: (jour, heure) =>
       `Votre cours est réservé le ${jour} à ${heure}. Un e-mail de confirmation vous a été envoyé.`,
     retourAccueil: "Retour à l'accueil",
     erreurGenerique: "La réservation a échoué. Réessayez ou contactez Gabriel au 053 45 08 171.",
-    erreurCreneaux: "Impossible de charger les créneaux disponibles pour le moment. Contactez directement Gabriel au 053 45 08 171.",
+    erreurCreneaux:
+      "Impossible de charger les créneaux disponibles pour le moment. Contactez directement Gabriel au 053 45 08 171.",
     compteProposeTitre: "Créer un compte pour la prochaine fois ?",
     compteProposeTexte: "Vous n'aurez plus à ressaisir votre adresse, digicode et niveau aux prochaines réservations.",
     compteBoutonCreer: "Créer mon compte →",
@@ -97,8 +201,7 @@ const fr = {
     titre: "Se connecter",
     sousTitre: "Entrez votre e-mail, vous recevrez un lien de connexion — pas de mot de passe à retenir.",
     envoyeTitre: "E-mail envoyé !",
-    envoyeTexte: (email: string) =>
-      `Ouvrez votre boîte mail (${email}) et cliquez sur le lien reçu pour vous connecter.`,
+    envoyeTexte: (email) => `Ouvrez votre boîte mail (${email}) et cliquez sur le lien reçu pour vous connecter.`,
     champEmail: "E-mail",
     erreur: "L'envoi a échoué. Réessayez, ou réservez sans compte au 053 45 08 171.",
     bouton: "Recevoir mon lien de connexion →",
@@ -112,7 +215,7 @@ const fr = {
     seConnecter: "Se connecter",
     bienvenue:
       "Bienvenue ! Complétez votre profil ci-dessous pour ne plus avoir à ressaisir vos informations lors des prochaines réservations.",
-    connecteEnTantQue: (email: string) => `Connecté(e) en tant que ${email}`,
+    connecteEnTantQue: (email) => `Connecté(e) en tant que ${email}`,
     champNom: "Nom *",
     champTelephone: "Téléphone",
     champNiveau: "Niveau scolaire",
@@ -123,7 +226,7 @@ const fr = {
       { id: "eleve", label: "Chez l'élève" },
       { id: "prof", label: "Chez le professeur" },
       { id: "zoom", label: "Par Zoom" },
-    ] as const,
+    ],
     boutonEnregistrer: "Enregistrer",
     boutonEnregistrement: "Enregistrement…",
     messageSucces: "Profil enregistré.",
@@ -132,7 +235,7 @@ const fr = {
   },
 };
 
-const he: typeof fr = {
+const he: Dictionary = {
   dir: "rtl",
   siteName: "שיעור גבריאל",
   nav: {
@@ -140,7 +243,7 @@ const he: typeof fr = {
     reserver: "קביעת שיעור",
     retourAccueil: "→ חזרה לדף הבית",
     dejaInscrit: "כבר רשומים? התחברות",
-    monCompte: (nom: string) => `החשבון שלי (${nom})`,
+    monCompte: (nom) => `החשבון שלי (${nom})`,
   },
   home: {
     badge: "שיעורים פרטיים · חטיבת ביניים ותיכון",
@@ -181,7 +284,7 @@ const he: typeof fr = {
     sousTitre: "בחרו מועד פנוי ביומן של גבריאל.",
     chargement: "טוען את המועדים הפנויים…",
     aucunCreneau: "אין כרגע מועדים פנויים. צרו קשר ישירות עם גבריאל בטלפון",
-    creneauChoisi: (jour: string, heure: string) => `המועד שנבחר: ${jour} בשעה ${heure}`,
+    creneauChoisi: (jour, heure) => `המועד שנבחר: ${jour} בשעה ${heure}`,
     changerCreneau: "שינוי מועד",
     prefilNote: "הפרטים שלכם מולאו אוטומטית מהפרופיל — אפשר לערוך במידת הצורך.",
     champNom: "שם התלמיד/ה או ההורה *",
@@ -202,11 +305,10 @@ const he: typeof fr = {
       { id: "eleve", label: "בבית התלמיד" },
       { id: "prof", label: "אצל המורה" },
       { id: "zoom", label: "בזום" },
-    ] as const,
+    ],
     niveaux: ["ו'", "ז'", "ח'", "ט'", "י'", "יא'", "יב'", "אחר"],
     confirmeTitre: "ההזמנה אושרה!",
-    confirmeTexte: (jour: string, heure: string) =>
-      `השיעור נקבע ל-${jour} בשעה ${heure}. נשלח אליכם אימייל אישור.`,
+    confirmeTexte: (jour, heure) => `השיעור נקבע ל-${jour} בשעה ${heure}. נשלח אליכם אימייל אישור.`,
     retourAccueil: "חזרה לדף הבית",
     erreurGenerique: "ההזמנה נכשלה. נסו שוב או צרו קשר עם גבריאל בטלפון 053 45 08 171.",
     erreurCreneaux: "לא ניתן לטעון את המועדים הפנויים כרגע. צרו קשר ישירות עם גבריאל בטלפון 053 45 08 171.",
@@ -219,7 +321,7 @@ const he: typeof fr = {
     titre: "התחברות",
     sousTitre: "הזינו את כתובת האימייל שלכם, תקבלו קישור התחברות — בלי צורך בסיסמה.",
     envoyeTitre: "האימייל נשלח!",
-    envoyeTexte: (email: string) => `פתחו את תיבת הדואר שלכם (${email}) ולחצו על הקישור שקיבלתם כדי להתחבר.`,
+    envoyeTexte: (email) => `פתחו את תיבת הדואר שלכם (${email}) ולחצו על הקישור שקיבלתם כדי להתחבר.`,
     champEmail: "אימייל",
     erreur: "השליחה נכשלה. נסו שוב, או קבעו שיעור בלי חשבון בטלפון 053 45 08 171.",
     bouton: "שליחת קישור התחברות ←",
@@ -232,7 +334,7 @@ const he: typeof fr = {
     nonConnecte: "אינכם מחוברים.",
     seConnecter: "התחברות",
     bienvenue: "ברוכים הבאים! השלימו את הפרופיל למטה כדי לא להזין שוב את הפרטים שלכם בהזמנות הבאות.",
-    connecteEnTantQue: (email: string) => `מחובר/ת בתור ${email}`,
+    connecteEnTantQue: (email) => `מחובר/ת בתור ${email}`,
     champNom: "שם *",
     champTelephone: "טלפון",
     champNiveau: "כיתה",
@@ -243,7 +345,7 @@ const he: typeof fr = {
       { id: "eleve", label: "בבית התלמיד" },
       { id: "prof", label: "אצל המורה" },
       { id: "zoom", label: "בזום" },
-    ] as const,
+    ],
     boutonEnregistrer: "שמירה",
     boutonEnregistrement: "שומר…",
     messageSucces: "הפרופיל נשמר.",
@@ -252,8 +354,8 @@ const he: typeof fr = {
   },
 };
 
-export const dictionaries: Record<Locale, typeof fr> = { fr, he };
+export const dictionaries: Record<Locale, Dictionary> = { fr, he };
 
-export function getDictionary(locale: Locale) {
+export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale] ?? dictionaries[DEFAULT_LOCALE];
 }
