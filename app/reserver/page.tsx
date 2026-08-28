@@ -8,7 +8,19 @@ interface Creneau {
   end: string; // ISO
 }
 
+interface Profil {
+  id: string;
+  email: string;
+  nom: string;
+  telephone: string | null;
+  adresse: string | null;
+  digicode: string | null;
+  niveau: string | null;
+  lieu_prefere: string | null;
+}
+
 type Etape = "chargement" | "choix" | "formulaire" | "envoi" | "confirme" | "erreur";
+type EtapeCompte = "masque" | "propose" | "envoi" | "envoye";
 
 const LIEUX = [
   { id: "eleve", label: "Chez l'élève" },
@@ -45,6 +57,10 @@ export default function ReserverPage() {
   const [choisi, setChoisi] = useState<Creneau | null>(null);
   const [lieu, setLieu] = useState<(typeof LIEUX)[number]["id"]>("zoom");
   const [erreur, setErreur] = useState<string>("");
+  const [profil, setProfil] = useState<Profil | null>(null);
+  const [emailReservation, setEmailReservation] = useState("");
+
+  const [etapeCompte, setEtapeCompte] = useState<EtapeCompte>("masque");
 
   useEffect(() => {
     let annule = false;
@@ -65,6 +81,16 @@ export default function ReserverPage() {
         );
         setEtape("erreur");
       });
+
+    fetch("/api/auth/moi")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (annule || !data?.profil) return;
+        setProfil(data.profil);
+        if (data.profil.lieu_prefere) setLieu(data.profil.lieu_prefere);
+      })
+      .catch(() => {});
+
     return () => {
       annule = true;
     };
@@ -85,6 +111,7 @@ export default function ReserverPage() {
     if (!choisi) return;
     setEtape("envoi");
     const fields = Object.fromEntries(new FormData(e.currentTarget).entries());
+    setEmailReservation(String(fields.email ?? ""));
     try {
       const res = await fetch("/api/book", {
         method: "POST",
@@ -94,9 +121,28 @@ export default function ReserverPage() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Échec de la réservation");
       setEtape("confirme");
-    } catch {
-      setErreur("La réservation a échoué. Réessayez ou contactez Gabriel au 053 45 08 171.");
+      setEtapeCompte(profil ? "masque" : "propose");
+    } catch (err) {
+      setErreur((err as Error).message || "La réservation a échoué. Réessayez ou contactez Gabriel au 053 45 08 171.");
       setEtape("formulaire");
+    }
+  }
+
+  async function handleCreerCompte(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setEtapeCompte("envoi");
+    const fields = Object.fromEntries(new FormData(e.currentTarget).entries());
+    try {
+      const res = await fetch("/api/auth/creer-compte-apres-reservation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...fields, lieu }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error();
+      setEtapeCompte("envoye");
+    } catch {
+      setEtapeCompte("propose");
     }
   }
 
@@ -107,9 +153,15 @@ export default function ReserverPage() {
           <Link href="/" className="font-display text-[20px] font-extrabold text-sg-navy">
             Shiour Gavriel
           </Link>
-          <Link href="/" className="text-[13.5px] font-semibold text-sg-navy underline">
-            ← Retour à l'accueil
-          </Link>
+          {profil ? (
+            <Link href="/mon-compte/" className="text-[13.5px] font-semibold text-sg-navy underline">
+              Mon compte ({profil.nom})
+            </Link>
+          ) : (
+            <Link href="/connexion/" className="text-[13.5px] font-semibold text-sg-navy underline">
+              Déjà inscrit ? Se connecter
+            </Link>
+          )}
         </div>
       </header>
 
@@ -185,11 +237,18 @@ export default function ReserverPage() {
               </button>
             </div>
 
+            {profil && (
+              <p className="text-[13px] text-sg-muted">
+                Vos informations sont pré-remplies depuis votre profil — modifiez-les si besoin.
+              </p>
+            )}
+
             <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
               Nom de l'élève / du parent *
               <input
                 required
                 name="nom"
+                defaultValue={profil?.nom ?? ""}
                 className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
               />
             </label>
@@ -200,6 +259,7 @@ export default function ReserverPage() {
                   required
                   type="tel"
                   name="telephone"
+                  defaultValue={profil?.telephone ?? ""}
                   className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
                 />
               </label>
@@ -209,6 +269,7 @@ export default function ReserverPage() {
                   required
                   type="email"
                   name="email"
+                  defaultValue={profil?.email ?? ""}
                   className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
                 />
               </label>
@@ -218,6 +279,7 @@ export default function ReserverPage() {
               <select
                 required
                 name="niveau"
+                defaultValue={profil?.niveau ?? ""}
                 className="rounded-sg-md border border-sg-border bg-white px-3.5 py-2.5 text-[14.5px] text-sg-ink outline-none focus-visible:border-sg-navy"
               >
                 <option value="">Sélectionner…</option>
@@ -244,6 +306,31 @@ export default function ReserverPage() {
                 ))}
               </div>
             </div>
+
+            {lieu === "eleve" && (
+              <>
+                <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
+                  Adresse *
+                  <input
+                    required
+                    name="adresse"
+                    defaultValue={profil?.adresse ?? ""}
+                    placeholder="Rue, numéro, ville"
+                    className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
+                  Digicode / instructions d'accès
+                  <input
+                    name="digicode"
+                    defaultValue={profil?.digicode ?? ""}
+                    placeholder="Code d'entrée, étage…"
+                    className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14.5px] outline-none focus-visible:border-sg-navy"
+                  />
+                </label>
+              </>
+            )}
+
             <label className="flex flex-col gap-1.5 text-[14px] font-semibold text-sg-ink">
               Message (optionnel)
               <textarea
@@ -267,15 +354,80 @@ export default function ReserverPage() {
         )}
 
         {etape === "confirme" && choisi && (
-          <div className="mt-8 rounded-sg-xl border border-sg-border bg-sg-paper p-6 text-center">
-            <h2 className="font-display text-[20px] font-bold text-sg-navy">Réservation confirmée !</h2>
-            <p className="mt-2 text-[14.5px] leading-[1.6] text-sg-ink-muted">
-              Votre cours est réservé le {formatJour(choisi.start)} à {formatHeure(choisi.start)}. Un e-mail de
-              confirmation vous a été envoyé.
-            </p>
-            <Link href="/" className="mt-4 inline-block text-[14px] font-bold text-sg-navy underline">
-              Retour à l'accueil
-            </Link>
+          <div className="mt-8 flex flex-col gap-4">
+            <div className="rounded-sg-xl border border-sg-border bg-sg-paper p-6 text-center">
+              <h2 className="font-display text-[20px] font-bold text-sg-navy">Réservation confirmée !</h2>
+              <p className="mt-2 text-[14.5px] leading-[1.6] text-sg-ink-muted">
+                Votre cours est réservé le {formatJour(choisi.start)} à {formatHeure(choisi.start)}. Un e-mail
+                de confirmation vous a été envoyé.
+              </p>
+              <Link href="/" className="mt-4 inline-block text-[14px] font-bold text-sg-navy underline">
+                Retour à l'accueil
+              </Link>
+            </div>
+
+            {etapeCompte === "propose" && (
+              <form
+                onSubmit={handleCreerCompte}
+                className="rounded-sg-xl border border-sg-border bg-white p-6"
+              >
+                <input type="hidden" name="email" value={emailReservation} />
+                <h3 className="font-display text-[16px] font-bold text-sg-navy">
+                  Créer un compte pour la prochaine fois ?
+                </h3>
+                <p className="mt-1.5 text-[13.5px] leading-[1.55] text-sg-ink-muted">
+                  Vous n'aurez plus à ressaisir votre adresse, digicode et niveau aux prochaines réservations.
+                </p>
+                <label className="mt-3.5 flex flex-col gap-1.5 text-[13.5px] font-semibold text-sg-ink">
+                  Nom
+                  <input
+                    required
+                    name="nom"
+                    className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14px] outline-none focus-visible:border-sg-navy"
+                  />
+                </label>
+                <label className="mt-3 flex flex-col gap-1.5 text-[13.5px] font-semibold text-sg-ink">
+                  Téléphone
+                  <input
+                    name="telephone"
+                    type="tel"
+                    className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14px] outline-none focus-visible:border-sg-navy"
+                  />
+                </label>
+                {lieu === "eleve" && (
+                  <>
+                    <label className="mt-3 flex flex-col gap-1.5 text-[13.5px] font-semibold text-sg-ink">
+                      Adresse
+                      <input
+                        name="adresse"
+                        className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14px] outline-none focus-visible:border-sg-navy"
+                      />
+                    </label>
+                    <label className="mt-3 flex flex-col gap-1.5 text-[13.5px] font-semibold text-sg-ink">
+                      Digicode / instructions d'accès
+                      <input
+                        name="digicode"
+                        className="rounded-sg-md border border-sg-border px-3.5 py-2.5 text-[14px] outline-none focus-visible:border-sg-navy"
+                      />
+                    </label>
+                  </>
+                )}
+                <button
+                  type="submit"
+                  className="mt-4 w-full rounded-sg-md bg-sg-navy py-3 text-[14.5px] font-bold text-white"
+                >
+                  Créer mon compte →
+                </button>
+              </form>
+            )}
+
+            {etapeCompte === "envoye" && (
+              <div className="rounded-sg-xl border border-sg-border bg-white p-6 text-center">
+                <p className="text-[14px] text-sg-ink">
+                  Un lien de connexion vous a été envoyé par e-mail pour activer votre compte.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </main>

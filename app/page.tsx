@@ -39,12 +39,17 @@ export default function HomePage() {
           <span className="font-display text-[20px] font-extrabold tracking-[-.3px] text-sg-navy">
             Shiour Gavriel
           </span>
-          <Link
-            href="/reserver/"
-            className="rounded-sg-pill bg-sg-gold px-5 py-2.5 text-[14px] font-bold text-sg-gold-ink shadow-sg-cta transition hover:-translate-y-px"
-          >
-            Réserver un cours
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/connexion/" className="hidden text-[13.5px] font-semibold text-sg-navy underline sm:inline">
+              Connexion
+            </Link>
+            <Link
+              href="/reserver/"
+              className="rounded-sg-pill bg-sg-gold px-5 py-2.5 text-[14px] font-bold text-sg-gold-ink shadow-sg-cta transition hover:-translate-y-px"
+            >
+              Réserver un cours
+            </Link>
+          </div>
         </div>
       </header>
 

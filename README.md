@@ -12,10 +12,11 @@ app/                    Pages Next.js (export statique)
   reserver/page.tsx      Réservation (client component, appelle /api/*)
 worker/                  Point d'entrée Cloudflare Worker (assets + API, pas Next.js)
   index.ts               Routeur : /api/* → handlers, sinon sert out/ (ASSETS)
-  shared.ts               Config créneaux + échange refresh token → access token
+  shared.ts               Config créneaux, échange refresh token → access token, sessions signées, envoi d'e-mail
   availability.ts        GET  /api/availability
   book.ts                 POST /api/book
-schema.sql               Schéma de la base D1 (table reservations)
+  auth.ts                 Comptes élève (lien magique) : /api/auth/*
+schema.sql               Schéma de la base D1 (reservations, eleves, magic_links)
 wrangler.toml             Config Worker : entry point (main), assets (out/), bindings D1
 ```
 
@@ -50,11 +51,15 @@ Le compte à connecter est `gavrielkrief66@gmail.com`.
    - Type d'application : **Web application**
    - URI de redirection autorisée : `https://developers.google.com/oauthplayground`
    - Noter le **Client ID** et le **Client Secret** générés
+3bis. **APIs & Services → Library** → chercher **Gmail API** → **Enable** (sert à envoyer les
+   e-mails de connexion par lien magique, avec le même compte Google — pas de service d'e-mail
+   tiers nécessaire)
 4. Aller sur [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground/)
    - Cliquer sur l'icône ⚙️ (en haut à droite) → cocher **Use your own OAuth credentials** → coller
      Client ID / Client Secret
-   - Dans la liste à gauche, trouver **Calendar API v3** → cocher le scope
-     `https://www.googleapis.com/auth/calendar`
+   - Dans la liste à gauche, cocher les scopes :
+     - **Calendar API v3** → `https://www.googleapis.com/auth/calendar`
+     - **Gmail API v1** → `https://www.googleapis.com/auth/gmail.send`
    - **Authorize APIs** → se connecter avec `gavrielkrief66@gmail.com` → accepter
    - **Step 2 : Exchange authorization code for tokens** → copier la valeur de **Refresh token**
 5. Dans Cloudflare, projet **shiourgavriel** → **Settings → Variables and secrets**, ajouter :
@@ -62,6 +67,8 @@ Le compte à connecter est `gavrielkrief66@gmail.com`.
    - `GOOGLE_CLIENT_SECRET` = le Client Secret (type **Secret**)
    - `GOOGLE_REFRESH_TOKEN` = le refresh token obtenu (type **Secret**)
    - `GOOGLE_CALENDAR_ID` = `gavrielkrief66@gmail.com` (ou l'ID d'un agenda secondaire dédié, si préféré)
+   - `SESSION_SECRET` = une longue chaîne aléatoire (ex. générée par un gestionnaire de mots de
+     passe, 40+ caractères) — sert à signer les cookies de connexion des comptes élève (type **Secret**)
 
 ### 3. Build settings Cloudflare (Workers & Pages → shiourgavriel → Settings → Builds)
 
