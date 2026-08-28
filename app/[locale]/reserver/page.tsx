@@ -386,6 +386,13 @@ export default function ReserverPage({ params }: { params: { locale: string } })
                 <button type="submit" className="mt-4 w-full rounded-sg-md bg-sg-navy py-3 text-[14.5px] font-bold text-white">
                   {t.compteBoutonCreer}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setEtapeCompte("masque")}
+                  className="mt-2.5 w-full text-center text-[13px] font-semibold text-sg-muted underline"
+                >
+                  {t.compteIgnorer}
+                </button>
               </form>
             )}
 

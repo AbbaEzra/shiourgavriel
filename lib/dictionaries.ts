@@ -76,6 +76,7 @@ interface Dictionary {
     compteProposeTitre: string;
     compteProposeTexte: string;
     compteBoutonCreer: string;
+    compteIgnorer: string;
     compteEnvoye: string;
   };
   connexion: {
@@ -197,6 +198,7 @@ const fr: Dictionary = {
     compteProposeTitre: "Créer un compte pour la prochaine fois ?",
     compteProposeTexte: "Vous n'aurez plus à ressaisir votre adresse, digicode et niveau aux prochaines réservations.",
     compteBoutonCreer: "Créer mon compte →",
+    compteIgnorer: "Non merci, je ne réserve qu'un seul cours",
     compteEnvoye: "Un lien de connexion vous a été envoyé par e-mail pour activer votre compte.",
   },
   connexion: {
@@ -318,6 +320,7 @@ const he: Dictionary = {
     compteProposeTitre: "ליצור חשבון לפעם הבאה?",
     compteProposeTexte: "לא תצטרכו להזין שוב את הכתובת, קוד הכניסה והכיתה בהזמנות הבאות.",
     compteBoutonCreer: "יצירת חשבון ←",
+    compteIgnorer: "לא תודה, אני מזמין/ה שיעור בודד בלבד",
     compteEnvoye: "נשלח אליכם קישור התחברות באימייל להפעלת החשבון.",
   },
   connexion: {
