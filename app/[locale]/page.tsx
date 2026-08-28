@@ -108,20 +108,6 @@ export default function HomePage({ params }: { params: { locale: string } }) {
           </div>
         </section>
 
-        {/* Atouts */}
-        <section className="border-y border-sg-border bg-sg-paper">
-          <div className="mx-auto max-w-sg-container px-sg-gutter py-[clamp(40px,5vw,64px)]">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-              {t.atouts.map((a) => (
-                <div key={a.titre} className="rounded-sg-lg border border-sg-border bg-white p-5">
-                  <h3 className="font-display text-[16px] font-bold text-sg-navy">{a.titre}</h3>
-                  <p className="mt-1.5 text-[13.5px] leading-[1.55] text-sg-ink-muted">{a.texte}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Tarifs */}
         <section className="mx-auto max-w-sg-container px-sg-gutter py-[clamp(44px,6vw,72px)]">
           <span className="text-[13px] font-bold uppercase tracking-[1.4px] text-sg-gold-ink">{t.tarifsLabel}</span>
@@ -144,6 +130,20 @@ export default function HomePage({ params }: { params: { locale: string } }) {
             ))}
           </div>
           <p className="mt-4 text-[13.5px] text-sg-muted">{t.tarifsNote}</p>
+        </section>
+
+        {/* Atouts */}
+        <section className="border-y border-sg-border bg-sg-paper">
+          <div className="mx-auto max-w-sg-container px-sg-gutter py-[clamp(40px,5vw,64px)]">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+              {t.atouts.map((a) => (
+                <div key={a.titre} className="rounded-sg-lg border border-sg-border bg-white p-5">
+                  <h3 className="font-display text-[16px] font-bold text-sg-navy">{a.titre}</h3>
+                  <p className="mt-1.5 text-[13.5px] leading-[1.55] text-sg-ink-muted">{a.texte}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Zones */}
