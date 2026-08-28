@@ -7,6 +7,7 @@ import {
   HEURE_FIN,
   JOURS_A_AFFICHER,
   JOURS_DISPONIBLES,
+  MARGE_TRAJET_MIN,
   TIMEZONE,
   getAccessToken,
   jsonResponse,
@@ -110,13 +111,14 @@ export async function handleAvailability(env: Env): Promise<Response> {
     };
     const busy = fbData.calendars[env.GOOGLE_CALENDAR_ID]?.busy ?? [];
 
+    const margeMs = MARGE_TRAJET_MIN * 60000;
     const libres = futurs.filter((c) => {
       const cStart = new Date(c.start).getTime();
       const cEnd = new Date(c.end).getTime();
       return !busy.some((b) => {
-        const bStart = new Date(b.start).getTime();
-        const bEnd = new Date(b.end).getTime();
-        return cStart < bEnd && cEnd > bStart; // chevauchement
+        const bStart = new Date(b.start).getTime() - margeMs;
+        const bEnd = new Date(b.end).getTime() + margeMs;
+        return cStart < bEnd && cEnd > bStart; // chevauchement (marge de trajet incluse)
       });
     });
 

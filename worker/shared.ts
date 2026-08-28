@@ -13,12 +13,13 @@ export interface Env {
 
 // --- Plage de disponibilité par défaut (à ajuster selon les préférences de Gabriel) ---
 // Jours (convention JS Date#getUTCDay) : 0 = dimanche ... 6 = samedi. Horaires en heure locale Israël.
-export const JOURS_DISPONIBLES = [1, 2, 3, 4]; // lundi à jeudi
+export const JOURS_DISPONIBLES = [0, 1, 2, 3, 4]; // dimanche à jeudi
 export const HEURE_DEBUT = 16; // 16h
 export const HEURE_FIN = 20; // 20h
 export const DUREE_CRENEAU_MIN = 60; // durée d'un créneau, en minutes
 export const JOURS_A_AFFICHER = 14; // fenêtre de réservation (2 semaines glissantes)
 export const TIMEZONE = "Asia/Jerusalem";
+export const MARGE_TRAJET_MIN = 30; // marge avant/après un événement existant, pour le temps de trajet
 
 /** Échange le refresh token contre un access token Google valide (courte durée). */
 export async function getAccessToken(env: Env): Promise<string> {

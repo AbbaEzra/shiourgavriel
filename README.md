@@ -83,10 +83,11 @@ Une fois le déploiement stable : **Settings → Domains → Add domain** → `s
 
 ## Réglages à ajuster (constantes dans `worker/shared.ts`)
 
-- `JOURS_DISPONIBLES` — jours de la semaine ouverts à la réservation (défaut : lundi à jeudi)
+- `JOURS_DISPONIBLES` — jours de la semaine ouverts à la réservation (défaut : dimanche à jeudi)
 - `HEURE_DEBUT` / `HEURE_FIN` — plage horaire quotidienne (défaut : 16h–20h)
 - `DUREE_CRENEAU_MIN` — durée d'un créneau en minutes (défaut : 60)
 - `JOURS_A_AFFICHER` — fenêtre de réservation glissante (défaut : 14 jours)
+- `MARGE_TRAJET_MIN` — marge avant/après un événement existant de l'agenda, pour le temps de trajet (défaut : 30 minutes)
 
 ## Développement local
 
