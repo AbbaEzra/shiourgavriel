@@ -1,6 +1,9 @@
 // POST /api/book — crée la réservation : événement Google Calendar (avec
-// invitation e-mail automatique à l'élève via sendUpdates=all) + ligne D1.
-import { getAccessToken, getSessionEleveId, jsonResponse, type Env } from "./shared";
+// invitation e-mail automatique à l'élève via sendUpdates=all) + ligne D1
+// + notification e-mail à Philippe.
+import { envoyerEmail, getAccessToken, getSessionEleveId, jsonResponse, type Env } from "./shared";
+
+const EMAIL_NOTIFICATION = "philippejallet@hotmail.fr";
 
 interface ReservationBody {
   start: string;
@@ -121,6 +124,28 @@ export async function handleBook(request: Request, env: Env): Promise<Response> 
       new Date().toISOString(),
     )
     .run();
+
+  try {
+    await envoyerEmail(
+      env,
+      EMAIL_NOTIFICATION,
+      `Nouvelle réservation — ${body.nom} (${body.niveau})`,
+      `<p>Nouvelle réservation sur shiourgavriel.com :</p>
+       <ul>
+         <li><strong>Créneau :</strong> ${new Date(body.start).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short" })}</li>
+         <li><strong>Élève / parent :</strong> ${body.nom}</li>
+         <li><strong>Téléphone :</strong> ${body.telephone}</li>
+         <li><strong>Email :</strong> ${body.email}</li>
+         <li><strong>Niveau :</strong> ${body.niveau}</li>
+         <li><strong>Lieu :</strong> ${lieuLabel}</li>
+         ${body.lieu === "eleve" && body.adresse ? `<li><strong>Adresse :</strong> ${body.adresse}</li>` : ""}
+         ${body.message ? `<li><strong>Message :</strong> ${body.message}</li>` : ""}
+       </ul>`,
+    );
+  } catch {
+    // La réservation est déjà confirmée (agenda + base) : une notification en échec
+    // ne doit pas faire échouer la réponse à l'élève.
+  }
 
   return jsonResponse({ success: true, id });
 }
